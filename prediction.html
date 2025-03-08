@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction - Student Performance Prediction</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: #000;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 60%;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #4CAF50;
+        }
+
+        nav a.active {
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        /* Main Content Styles */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .page-title {
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .prediction-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .prediction-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .prediction-form {
+            padding: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .btn-container {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .result-container {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .prediction-result {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .result-message {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+                width: 50%;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with navigation -->
+    <header>
+        <div class="logo">Student Performance Prediction and Analysis</div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+            <a href="prediction.html" class="active">Prediction</a>
+            <a href="chart.html">Chart</a>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main>
+        <h1 class="page-title">Predict Student Performance</h1>
+
+        <div class="prediction-container">
+            <div class="prediction-header">
+                <h2>Enter Student Data</h2>
+            </div>
+            <form id="predictionForm" class="prediction-form" novalidate>
+                <div class="form-group">
+                    <label for="Student ID">Student ID</label>
+                    <input type="text" id="Studentid" name="studentid" required>
+                    <div class="error-message" id="iderror">Please enter a valid StudenID
+</div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <input type="text" id="gender" name="gender" required>
+                    <div class="error-message" id="genderError">Please enter a valid gender</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" name="age" min="0" required>
+                    <div class="error-message" id="ageError">Please enter a valid age</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" required>
+                    <div class="error-message" id="addressError">Please enter a valid address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="parentEducation">Parent Education</label>
+                    <input type="text" id="parentEducation" name="parentEducation" required>
+                    <div class="error-message" id="parentEducationError">Please enter a valid parent education level</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="travelTime">Travel Time (minutes)</label>
+                    <input type="number" id="travelTime" name="travelTime" min="0" required>
+                    <div class="error-message" id="travelTimeError">Please enter a valid travel time</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="studyTime">Study Time (hours per week)</label>
+                    <input type="number" id="studyTime" name="studyTime" min="0" required>
+                    <div class="error-message" id="studyTimeError">Please enter a valid study time</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="failures">Failures</label>
+                    <input type="number" id="failures" name="failures" min="0" required>
+                    <div class="error-message" id="failuresError">Please enter a valid number of failures</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="extraClasses">Extra Classes</label>
+                    <input type="text" id="extraClasses" name="extraClasses" required>
+                    <div class="error-message" id="extraClassesError">Please enter a valid response</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="extraCurricular">Extra Curricular Activities</label>
+                    <input type="text" id="extraCurricular" name="extraCurricular" required>
+                    <div class="error-message" id="extraCurricularError">Please enter a valid response</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="internetAccess">Internet Access</label>
+                    <input type="text" id="internetAccess" name="internetAccess" required>
+                    <div class="error-message" id="internetAccessError">Please enter a valid response</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="health">Health</label>
+                    <input type="number" id="health" name="health" min="0" max="100" required>
+                    <div class="error-message" id="healthError">Please enter a valid health percentage (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="absences">Absences</label>
+                    <input type="number" id="absences" name="absences" min="0" required>
+                    <div class="error-message" id="absencesError">Please enter a valid number of absences</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject1Mark">Subject 1 Mark</label>
+                    <input type="number" id="subject1Mark" name="subject1Mark" min="0" max="100" required>
+                    <div class="error-message" id="subject1MarkError">Please enter a valid mark (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject2Mark">Subject 2 Mark</label>
+                    <input type="number" id="subject2Mark" name="subject2Mark" min="0" max="100" required>
+                    <div class="error-message" id="subject2MarkError">Please enter a valid mark (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject3Mark">Subject 3 Mark</label>
+                    <input type="number" id="subject3Mark" name="subject3Mark" min="0" max="100" required>
+                    <div class="error-message" id="subject3MarkError">Please enter a valid mark (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject1Final">Subject 1 Final Mark</label>
+                    <input type="number" id="subject1Final" name="subject1Final" min="0" max="100" required>
+                    <div class="error-message" id="subject1FinalError">Please enter a valid final mark (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject2Final">Subject 2 Final Mark</label>
+                    <input type="number" id="subject2Final" name="subject2Final" min="0" max="100" required>
+                    <div class="error-message" id="subject2FinalError">Please enter a valid final mark (0-100)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject3Final">Subject 3 Final Mark</label>
+                    <input type="number" id="subject3Final" name="subject3Final" min="0" max="100" required>
+                    <div class="error-message" id="subject3FinalError">Please enter a valid final mark (0-100)</div>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit">Predict Performance</button>
+                </div>
+            </form>
+
+            <div id="resultContainer" class="result-container">
+                <div class="result-title">Predicted Final Grades</div>
+                <div id="predictionResult" class="prediction-result">A</div>
+                <p id="resultMessage" class="result-message">
+                    Based on the provided data, this student is likely to perform exceptionally well!
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Student Performance Prediction Project. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
