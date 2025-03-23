@@ -94,7 +94,6 @@ def predict():
     if not student_id:
         flash("Student ID is required.", "error")
         return redirect(url_for('home'))
-
     try:
         # Preprocess categorical values
         gender = 1 if request.form.get('gender', '').lower() == 'male' else 0
@@ -191,17 +190,10 @@ def predict():
 
     return redirect(url_for('home'))
 
+
 @app.route('/result')
 def result():
-    if 'predicted_marks' not in session:
-        flash("No prediction data found. Please try again.", "error")
-        return redirect(url_for('home'))
+    return render_template('result.html')
 
-    return render_template(
-        'result.html',
-        student_id=session.get('student_id'),
-        predicted_marks=session.get('predicted_marks'),
-        weak_subjects=session.get('weak_subjects')
-    )
 if __name__ == '__main__':
     app.run(debug=True)
