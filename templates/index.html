@@ -59,7 +59,7 @@
         /* Hero Section */
         .hero {
             height: 80vh;
-            background-image: url(image1.jpg);
+            background-image: url("{{ url_for('static', filename='image1.jpg') }}");
             background-size: cover;
             background-position: center;
             display: flex;
@@ -205,8 +205,8 @@
         <div class="logo">Student Performance Prediction and Analysis</div>
         <nav>
             <a href="#" class="active">Home</a>
-            <a href="login.html">Login</a>
-            <a href="prediction.html">Prediction</a>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('predict') }}">Prediction</a>
         </nav>
     </header>
 

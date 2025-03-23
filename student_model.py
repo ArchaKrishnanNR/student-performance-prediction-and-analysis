@@ -75,8 +75,8 @@ model = joblib.load('student_model.pkl')
 thresholds = joblib.load('thresholds.pkl')
 
 
-'''# Sample Input for Testing
-sample_input = np.array([[1, 16, 1, 3, 2, 3, 0, 1, 1, 1, 5, 3, 99, 96, 21]])
+# Sample Input for Testing
+sample_input = np.array([[1, 16, 1, 3, 2, 3, 0, 1, 1, 1, 5, 3, 21, 17, 45]])
 predicted_marks = model.predict(sample_input)[0]
 
 # Identify Weak Subject
@@ -89,4 +89,4 @@ if predicted_marks[2] < thresholds['Sub3']:
     weak_subjects.append("Subject 3")
 
 print(f"Predicted Marks: {predicted_marks}")
-print(f"Weak Subject(s): {', '.join(weak_subjects) if weak_subjects else 'None'}")'''
+print(f"Weak Subject(s): {', '.join(weak_subjects) if weak_subjects else 'None'}")

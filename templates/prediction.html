@@ -258,7 +258,7 @@
                     <label for="Student ID">Student ID</label>
                     <input type="text" id="Studentid" name="studentid" required>
                     <div class="error-message" id="iderror">Please enter a valid StudenID
-</div>
+                </div>
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <input type="text" id="gender" name="gender" required>
@@ -349,26 +349,14 @@
                     <div class="error-message" id="subject3MarkError">Please enter a valid mark (0-100)</div>
                 </div>
 
-                <div class="form-group">
-                    <label for="subject1Final">Subject 1 Final Mark</label>
-                    <input type="number" id="subject1Final" name="subject1Final" min="0" max="100" required>
-                    <div class="error-message" id="subject1FinalError">Please enter a valid final mark (0-100)</div>
-                </div>
 
-                <div class="form-group">
-                    <label for="subject2Final">Subject 2 Final Mark</label>
-                    <input type="number" id="subject2Final" name="subject2Final" min="0" max="100" required>
-                    <div class="error-message" id="subject2FinalError">Please enter a valid final mark (0-100)</div>
-                </div>
 
-                <div class="form-group">
-                    <label for="subject3Final">Subject 3 Final Mark</label>
-                    <input type="number" id="subject3Final" name="subject3Final" min="0" max="100" required>
-                    <div class="error-message" id="subject3FinalError">Please enter a valid final mark (0-100)</div>
-                </div>
+
+
 
                 <div class="btn-container">
                     <button type="submit">Predict Performance</button>
+
                 </div>
             </form>
 
@@ -387,5 +375,33 @@
         <p>&copy; 2025 Student Performance Prediction Project. All rights reserved.</p>
     </footer>
 
+    <script>
+    document.getElementById("predictionForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        let formData = new FormData(this); // Capture form data
+
+        fetch("/predict", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            // Store the response in localStorage
+            localStorage.setItem("predictedMarks", JSON.stringify(data.predicted_marks));
+            localStorage.setItem("weakSubjects", JSON.stringify(data.weak_subjects));
+            localStorage.setItem("resources", JSON.stringify(data.resources));
+
+            // Redirect to result.html
+            window.location.href = "result.html";
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
 </body>
 </html>
