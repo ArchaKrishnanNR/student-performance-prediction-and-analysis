@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Box Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            padding: 20px;
+            width: 50%;
+            min-height: 30%;
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+        .close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #6200ea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3700b3;
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="fetchData()">Show Message</button>
+
+    <div class="modal" id="messageBox">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Fetched Data</h2>
+            <p id="messageContent">Loading...</p>
+        </div>
+    </div>
+
+    <script>
+        function fetchData() {
+            fetch("http://127.0.0.1:5000/get-data")  // Replace with your Flask API URL
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("messageContent").innerHTML = data.message;
+                    document.getElementById("messageBox").style.display = "flex";
+                })
+                .catch(error => {
+                    document.getElementById("messageContent").innerHTML = "Error fetching data!";
+                });
+        }
+
+        function closeModal() {
+            document.getElementById("messageBox").style.display = "none";
+        }
+    </script>
+
+</body>
+</html>

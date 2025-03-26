@@ -241,7 +241,7 @@
             <a href="index.html">Home</a>
             <a href="login.html">Login</a>
             <a href="prediction.html" class="active">Prediction</a>
-            <a href="chart.html">Chart</a>
+
         </nav>
     </header>
 
@@ -255,9 +255,9 @@
             </div>
             <form id="predictionForm" class="prediction-form" novalidate>
                 <div class="form-group">
-                    <label for="Student ID">Student ID</label>
-                    <input type="text" id="Studentid" name="studentid" required>
-                    <div class="error-message" id="iderror">Please enter a valid StudenID
+                    <label for="studentid">Student ID</label>
+                    <input type="text" id="studentid" name="studentid" required>
+                    <div class="error-message" id="iderror">Please enter a valid StudentID</div>
                 </div>
                 <div class="form-group">
                     <label for="gender">Gender</label>
@@ -349,14 +349,9 @@
                     <div class="error-message" id="subject3MarkError">Please enter a valid mark (0-100)</div>
                 </div>
 
-
-
-
-
-
                 <div class="btn-container">
                     <button type="submit">Predict Performance</button>
-
+                    <button type="button" id="viewResultsBtn" style="display: none;">View Prediction Result</button>
                 </div>
             </form>
 
@@ -376,35 +371,53 @@
     </footer>
 
     <script>
-        document.getElementById("predictionForm").addEventListener("submit", function(event) {
-            event.preventDefault(); // Prevent default form submission
+        document.addEventListener("DOMContentLoaded", function () {
+            const predictionForm = document.getElementById("predictionForm");
+            const viewResultsBtn = document.getElementById("viewResultsBtn");
 
-            let formData = new FormData(this); // Capture form data
+            if (!predictionForm) {
+                console.error("Prediction form not found!");
+                return;
+            }
 
-            fetch('/predict', {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams(new FormData(document.getElementById("predictionForm")))
-})
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert("Error: " + data.error);
-                    return;
-                }
+            predictionForm.addEventListener("submit", function (event) {
+                event.preventDefault(); // Prevent default form submission
 
-                // Store the response in localStorage
-                localStorage.setItem("predictedMarks", JSON.stringify(data.predicted_marks));
-                localStorage.setItem("weakSubjects", JSON.stringify(data.weak_subjects));
-                localStorage.setItem("resources", JSON.stringify(data.resources));
+                let formData = new FormData(predictionForm);
 
-                // Redirect to result.html
+                fetch("/predict", {  // Use relative URL
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Server error! Status: " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Show the View Results button
+                        viewResultsBtn.style.display = "inline-block";
+
+                        // Optional: Show some feedback that prediction was successful
+                        alert("Prediction successful! Click 'View Prediction Result' to see details.");
+                    } else {
+                        alert("Prediction failed: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred during prediction. Please try again.");
+                });
+            });
+
+            // Event listener for View Results button
+            viewResultsBtn.addEventListener("click", function() {
+                // Redirect to result page (Flask route, not HTML file)
                 window.location.href = "/result";
-            })
-            .catch(error => console.error("Error:", error));
+            });
         });
-        </script>
+    </script>
 </body>
 </html>

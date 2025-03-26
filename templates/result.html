@@ -3,46 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prediction Results</title>
+    <title>Results - Student Performance Prediction</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 50px; }
-        .container { background: white; padding: 20px; border-radius: 10px; width: 50%; margin: auto; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
-        h2 { color: #333; }
-        p { font-size: 18px; margin: 10px 0; }
-        .highlight { font-weight: bold; color: #e44d26; }
-        .btn { display: inline-block; margin-top: 20px; padding: 10px 15px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; }
-        .btn:hover { background: #45a049; }
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: #000;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 60%;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #4CAF50;
+        }
+
+        nav a.active {
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        /* Main Content Styles */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .page-title {
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .results-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .results-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .results-content {
+            padding: 2rem;
+        }
+
+        .result-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .marks-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .mark-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .subject-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .mark {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .mark.weak {
+            color: #f44336;
+        }
+
+        .weak-subjects {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            border-radius: 4px;
+        }
+
+        .recommendation {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+
+        .btn-container {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 0.5rem;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.secondary {
+            background-color: #757575;
+        }
+
+        button.secondary:hover {
+            background-color: #616161;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+                width: 50%;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            .marks-container {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Header with navigation -->
+    <header>
+        <div class="logo">Student Performance Prediction and Analysis</div>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/predict">Prediction</a>
+            <a href="/result" class="active">Results</a>
+            <a href="/chart">Chart</a>
+        </nav>
+    </header>
 
-    <div class="container">
-        <h2>Prediction Results</h2>
-        <p><strong>Predicted Marks:</strong></p>
-        <p>Subject 1: <span class="highlight">{{ predicted_marks[0] }}</span></p>
-        <p>Subject 2: <span class="highlight">{{ predicted_marks[1] }}</span></p>
-        <p>Subject 3: <span class="highlight">{{ predicted_marks[2] }}</span></p>
+    <!-- Main content -->
+    <main>
+        <h1 class="page-title">Student Performance Results</h1>
 
-        <p>Weak Subject(s): <span class="highlight">
-            {% if weak_subjects %}
-                {{ ", ".join(weak_subjects) }}
-            {% else %}
-                None
-            {% endif %}
-        </span></p>
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Prediction Results</h2>
+            </div>
+            <div class="results-content">
+                <div class="result-card">
+                    <div class="result-title">Predicted Final Grades</div>
+                    <div class="marks-container">
+                        <div class="mark-box">
+                            <div class="subject-name">Subject 1</div>
+                            <div class="mark {% if results.weak_subjects and 'Subject 1' in results.weak_subjects %}weak{% endif %}">{{ results.sub1 }}</div>
+                        </div>
+                        <div class="mark-box">
+                            <div class="subject-name">Subject 2</div>
+                            <div class="mark {% if results.weak_subjects and 'Subject 2' in results.weak_subjects %}weak{% endif %}">{{ results.sub2 }}</div>
+                        </div>
+                        <div class="mark-box">
+                            <div class="subject-name">Subject 3</div>
+                            <div class="mark {% if results.weak_subjects and 'Subject 3' in results.weak_subjects %}weak{% endif %}">{{ results.sub3 }}</div>
+                        </div>
+                    </div>
 
-        <p id="resourcesContainer">
-            {% if weak_subjects %}
-                {% for subject in weak_subjects %}
-                    <a href="{{ resources.get(subject, '#') }}" target="_blank" class="btn">
-                        Study Resources for {{ subject }}
-                    </a><br>
-                {% endfor %}
-            {% endif %}
-        </p>
+                    {% if results.weak_subjects and results.weak_subjects != "None" %}
+                    <div class="weak-subjects">
+                        <div class="result-title">Areas Needing Improvement</div>
+                        <p>Based on our analysis, the student needs to focus more on: <strong>{{ results.weak_subjects }}</strong></p>
+                    </div>
+                    {% endif %}
 
-        <a href="{{ url_for('predict') }}" class="btn">Predict Again</a>
-    </div>
+                    <div class="recommendation">
+                        <div class="result-title">Recommendations</div>
+                        {% if results.weak_subjects and results.weak_subjects != "None" %}
+                        <p>We recommend increasing study time for the weak subjects, seeking additional help from teachers,
+                           and considering tutoring or extra practice sessions. Setting specific learning goals for these subjects
+                           can also help improve performance.</p>
+                        {% else %}
+                        <p>The student is performing well in all subjects. To maintain this progress, we recommend continuing
+                           with the current study habits, exploring advanced topics in areas of interest, and helping peers
+                           who may be struggling with these subjects.</p>
+                        {% endif %}
+                    </div>
+                </div>
 
+                <div class="btn-container">
+                    <button onclick="window.location.href='/predict'">Make Another Prediction</button>
+                    <button class="secondary" onclick="window.location.href='/chart'">View Performance Charts</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Student Performance Prediction Project. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Any client-side logic can go here
+        });
+    </script>
 </body>
 </html>
