@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, jsonify, request, redirect, session, flash, url_for
 import mysql.connector
 import hashlib
@@ -76,7 +77,6 @@ def logout():
     session.pop('username', None)
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
-
 @app.route('/predict', methods=['POST', 'GET'])
 def predict():
     if request.method == 'GET':
@@ -95,6 +95,12 @@ def predict():
         flash("Student ID is required.", "error")
         return redirect(url_for('home'))
 
+    # Print form data for debugging
+    print("Form data received:")
+    for key, value in request.form.items():
+        print(f"{key}: {value}")
+
+    conn = None
     try:
         # Preprocess categorical values
         gender = 1 if request.form.get('gender', '').lower() == 'male' else 0
@@ -113,93 +119,166 @@ def predict():
         sub2_mark = int(request.form.get('subject2Mark', 0))
         sub3_mark = int(request.form.get('subject3Mark', 0))
 
+        # Print processed data for debugging
+        print(f"Processed data for student {student_id}:")
+        print(f"gender: {gender}, age: {age}, address: {address}, parent_education: {parent_education}")
+        print(f"travel_time: {travel_time}, study_time: {study_time}, failures: {failures}")
+        print(f"extra_classes: {extra_classes}, extra_curricular: {extra_curricular}")
+        print(f"internet_access: {internet_access}, health: {health}, absences: {absences}")
+        print(f"sub1_mark: {sub1_mark}, sub2_mark: {sub2_mark}, sub3_mark: {sub3_mark}")
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Store student data
-        cursor.execute("""
-            INSERT INTO student (student_id, username, gender, age, address, parent_education, travel_time, study_time,
-                                 failures, extra_classes, extra_curricular, internet_access, health, absences, sub1_mark,
-                                 sub2_mark, sub3_mark)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                gender = VALUES(gender), age = VALUES(age), address = VALUES(address),
-                parent_education = VALUES(parent_education), travel_time = VALUES(travel_time),
-                study_time = VALUES(study_time), failures = VALUES(failures),
-                extra_classes = VALUES(extra_classes), extra_curricular = VALUES(extra_curricular),
-                internet_access = VALUES(internet_access), health = VALUES(health),
-                absences = VALUES(absences), sub1_mark = VALUES(sub1_mark),
-                sub2_mark = VALUES(sub2_mark), sub3_mark = VALUES(sub3_mark)
-        """, (student_id, username, gender, age, address, parent_education, travel_time, study_time, failures,
-              extra_classes, extra_curricular, internet_access, health, absences, sub1_mark, sub2_mark, sub3_mark))
-        conn.commit()
+        # Store student data with better error handling
+        try:
+            print("Attempting to insert/update student data...")
+            query = """
+                INSERT INTO student (student_id, username, gender, age, address, parent_education, travel_time,
+                                    study_time, failures, extra_classes, extra_curricular, internet_access,
+                                    health, absences, sub1_mark, sub2_mark, sub3_mark)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    gender = VALUES(gender),
+                    age = VALUES(age),
+                    address = VALUES(address),
+                    parent_education = VALUES(parent_education),
+                    travel_time = VALUES(travel_time),
+                    study_time = VALUES(study_time),
+                    failures = VALUES(failures),
+                    extra_classes = VALUES(extra_classes),
+                    extra_curricular = VALUES(extra_curricular),
+                    internet_access = VALUES(internet_access),
+                    health = VALUES(health),
+                    absences = VALUES(absences),
+                    sub1_mark = VALUES(sub1_mark),
+                    sub2_mark = VALUES(sub2_mark),
+                    sub3_mark = VALUES(sub3_mark)
+            """
 
-        # Fetch stored student data
-        cursor.execute("""
-            SELECT gender, age, address, parent_education, travel_time, study_time, failures, extra_classes, extra_curricular,
-                   internet_access, health, absences, sub1_mark, sub2_mark, sub3_mark
-            FROM student
-            WHERE student_id = %s
-        """, (student_id,))
-        student_data = cursor.fetchone()
+            params = (student_id, username, gender, age, address, parent_education, travel_time,
+                      study_time, failures, extra_classes, extra_curricular, internet_access,
+                      health, absences, sub1_mark, sub2_mark, sub3_mark)
 
-        if not student_data:
-            conn.close()
-            flash("Student data not found.", "error")
+            cursor.execute(query, params)
+
+            # Check if rows were affected
+            rows_affected = cursor.rowcount
+            print(f"Student table update - rows affected: {rows_affected}")
+
+            conn.commit()
+            print("Student data successfully committed")
+        except mysql.connector.Error as db_err:
+            print(f"Database error during student update: {db_err}")
+            if conn:
+                conn.rollback()
+            flash(f"Database error: {str(db_err)}", "error")
             return redirect(url_for('home'))
 
-        student_data = np.array(student_data, dtype=np.float64).reshape(1, -1)
+        # Verify the data was stored by fetching it back
+        print("Verifying stored student data...")
+        try:
+            cursor.execute("""
+                SELECT gender, age, address, parent_education, travel_time, study_time, failures,
+                       extra_classes, extra_curricular, internet_access, health, absences,
+                       sub1_mark, sub2_mark, sub3_mark
+                FROM student
+                WHERE student_id = %s
+            """, (student_id,))
 
-        # Predict marks
-        predicted_marks = model.predict(student_data)[0]
+            student_data = cursor.fetchone()
 
-        weak_subjects = []
-        if predicted_marks[0] < thresholds['Sub1']:
-            weak_subjects.append("Subject 1")
-        if predicted_marks[1] < thresholds['Sub2']:
-            weak_subjects.append("Subject 2")
-        if predicted_marks[2] < thresholds['Sub3']:
-            weak_subjects.append("Subject 3")
+            if not student_data:
+                print(f"ERROR: No data found for student_id {student_id} after insert/update")
+                flash("Failed to store student data.", "error")
+                return redirect(url_for('home'))
 
-        weak_subjects_str = ", ".join(weak_subjects) if weak_subjects else "None"
+            print(f"Retrieved student data: {student_data}")
 
-        # Store prediction results in session for result page
-        session['prediction_results'] = {
-            'sub1': int(predicted_marks[0]),
-            'sub2': int(predicted_marks[1]),
-            'sub3': int(predicted_marks[2]),
-            'weak_subjects': weak_subjects_str
-        }
+            student_data = np.array(student_data, dtype=np.float64).reshape(1, -1)
 
-        # Store prediction results in database
-        cursor.execute("""
-            INSERT INTO prediction (username, studentid, predicted_sub1, predicted_sub2, predicted_sub3, weak_subject)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                predicted_sub1 = VALUES(predicted_sub1),
-                predicted_sub2 = VALUES(predicted_sub2),
-                predicted_sub3 = VALUES(predicted_sub3),
-                weak_subject = VALUES(weak_subject)
-        """, (username, student_id, int(predicted_marks[0]), int(predicted_marks[1]), int(predicted_marks[2]), weak_subjects_str))
-        conn.commit()
-        conn.close()
+            # Predict marks
+            predicted_marks = model.predict(student_data)[0]
+            print(f"Predicted marks: {predicted_marks}")
 
-        # Return JSON response
-        return jsonify({
-            "success": True,
-            "predicted_marks": {
-                "sub1": int(predicted_marks[0]),
-                "sub2": int(predicted_marks[1]),
-                "sub3": int(predicted_marks[2])
+            weak_subjects = []
+            if predicted_marks[0] < thresholds['Sub1']:
+                weak_subjects.append("Subject 1")
+            if predicted_marks[1] < thresholds['Sub2']:
+                weak_subjects.append("Subject 2")
+            if predicted_marks[2] < thresholds['Sub3']:
+                weak_subjects.append("Subject 3")
+
+            weak_subjects_str = ", ".join(weak_subjects) if weak_subjects else "None"
+            print(f"Weak subjects: {weak_subjects_str}")
+
+            # Store prediction results in session for result page
+            session['prediction_results'] = {
+                'sub1': int(predicted_marks[0]),
+                'sub2': int(predicted_marks[1]),
+                'sub3': int(predicted_marks[2]),
+                'weak_subjects': weak_subjects_str
             }
-        })
 
+            # Store prediction results in database
+            try:
+                print("Storing prediction results...")
+                cursor.execute("""
+                    INSERT INTO prediction (username, studentid, predicted_sub1, predicted_sub2, predicted_sub3, weak_subject)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        predicted_sub1 = VALUES(predicted_sub1),
+                        predicted_sub2 = VALUES(predicted_sub2),
+                        predicted_sub3 = VALUES(predicted_sub3),
+                        weak_subject = VALUES(weak_subject)
+                """, (username, student_id, int(predicted_marks[0]), int(predicted_marks[1]), int(predicted_marks[2]), weak_subjects_str))
+
+                rows_affected = cursor.rowcount
+                print(f"Prediction table update - rows affected: {rows_affected}")
+
+                conn.commit()
+                print("Prediction data successfully committed")
+            except mysql.connector.Error as db_err:
+                print(f"Database error during prediction storage: {db_err}")
+                conn.rollback()
+                flash(f"Error storing prediction results: {str(db_err)}", "error")
+                return redirect(url_for('home'))
+
+            # Return JSON response only after all database operations are complete
+            return jsonify({
+                "success": True,
+                "predicted_marks": {
+                    "sub1": int(predicted_marks[0]),
+                    "sub2": int(predicted_marks[1]),
+                    "sub3": int(predicted_marks[2])
+                }
+            })
+
+        except mysql.connector.Error as db_err:
+            print(f"Database error during student data retrieval: {db_err}")
+            flash(f"Error retrieving student data: {str(db_err)}", "error")
+            return redirect(url_for('home'))
+
+    except ValueError as ve:
+        print(f"Value error: {ve}")
+        flash(f"Invalid input data: {str(ve)}", "error")
+        return redirect(url_for('home'))
     except mysql.connector.Error as db_err:
-        flash("Database error occurred. Please try again.", "error")
+        print(f"Database connection error: {db_err}")
+        flash(f"Database connection error: {str(db_err)}", "error")
+        return redirect(url_for('home'))
     except Exception as e:
-        flash("Unexpected error occurred. Please try again.", "error")
-
-    return redirect(url_for('home'))
+        print(f"Unexpected error: {e}")
+        flash(f"An unexpected error occurred: {str(e)}", "error")
+        return redirect(url_for('home'))
+    finally:
+        # Make sure the connection is always closed
+        if conn:
+            try:
+                conn.close()
+                print("Database connection closed")
+            except:
+                pass
 
 @app.route('/result')
 def result():
@@ -212,6 +291,95 @@ def result():
     prediction_results = session.pop('prediction_results', None)
 
     return render_template('result.html', results=prediction_results)
+# Add these routes to your existing app.py file
+
+@app.route('/charts')
+def charts():
+    if 'username' not in session:
+        flash("Please log in to view charts.", "error")
+        return redirect(url_for('login'))
+
+    # Get the most recent predicted student ID for this user
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get the most recent student prediction - using predictionid (the primary key)
+    cursor.execute("""
+        SELECT studentid FROM prediction
+        WHERE username = %s
+        ORDER BY predictionid DESC LIMIT 1
+    """, (username,))
+    result = cursor.fetchone()
+
+    if not result:
+        flash("No prediction data available. Make a prediction first.", "error")
+        return redirect(url_for('predict'))
+
+    student_id = result['studentid']
+
+    # Get the current student's data
+    cursor.execute("""
+        SELECT studentid, predicted_sub1, predicted_sub2, predicted_sub3
+        FROM prediction
+        WHERE studentid = %s
+    """, (student_id,))
+    current_student = cursor.fetchone()
+
+    # Get previously predicted students data (limit to 10)
+    cursor.execute("""
+        SELECT studentid, predicted_sub1, predicted_sub2, predicted_sub3
+        FROM prediction
+        WHERE username = %s AND studentid != %s
+        ORDER BY predictionid DESC
+        LIMIT 10
+    """, (username, student_id))
+    previous_students = cursor.fetchall()
+
+    # Get average subject marks for all students
+    cursor.execute("""
+        SELECT
+            AVG(predicted_sub1) as avg_sub1,
+            AVG(predicted_sub2) as avg_sub2,
+            AVG(predicted_sub3) as avg_sub3
+        FROM prediction
+        WHERE username = %s
+    """, (username,))
+    averages = cursor.fetchone()
+
+    # Get factor data for the current student
+    cursor.execute("""
+        SELECT student_id, gender, age, address, parent_education, travel_time,
+               study_time, failures, extra_classes, extra_curricular,
+               internet_access, health, absences, sub1_mark, sub2_mark, sub3_mark
+        FROM student
+        WHERE student_id = %s
+    """, (student_id,))
+    student_factors = cursor.fetchone()
+
+    # Get weak subjects distribution
+    cursor.execute("""
+        SELECT
+            COUNT(CASE WHEN weak_subject LIKE '%Subject 1%' THEN 1 END) as weak_sub1,
+            COUNT(CASE WHEN weak_subject LIKE '%Subject 2%' THEN 1 END) as weak_sub2,
+            COUNT(CASE WHEN weak_subject LIKE '%Subject 3%' THEN 1 END) as weak_sub3,
+            COUNT(CASE WHEN weak_subject = 'None' THEN 1 END) as no_weak
+        FROM prediction
+        WHERE username = %s
+    """, (username,))
+    weak_subjects = cursor.fetchone()
+
+    conn.close()
+
+    chart_data = {
+        'current_student': current_student,
+        'previous_students': previous_students,
+        'averages': averages,
+        'student_factors': student_factors,
+        'weak_subjects': weak_subjects
+    }
+
+    return render_template('chart.html', chart_data=chart_data)
 
 if __name__ == '__main__':
      app.run(debug=True)

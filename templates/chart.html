@@ -3,40 +3,520 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart Page</title>
+    <title>Performance Charts - Student Performance Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        /* Global Styles */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: #000;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 60%;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #4CAF50;
+        }
+
+        nav a.active {
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        /* Main Content Styles */
+        main {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f5f5f5;
+            padding: 2rem;
         }
-        h1 {
-            margin-bottom: 20px;
+
+        .page-title {
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: #333;
+            text-align: center;
         }
-        #chart-container {
-            width: 80%;
-            max-width: 600px;
-            height: 400px;
-            background: white;
-            border: 1px solid #ccc;
+
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chart {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+
+        .no-data {
             display: flex;
-            align-items: center;
             justify-content: center;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            align-items: center;
+            height: 200px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .btn-container {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 0.5rem;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.secondary {
+            background-color: #757575;
+        }
+
+        button.secondary:hover {
+            background-color: #616161;
+        }
+
+        /* Display utility classes */
+        .hidden {
+            display: none;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+                width: 50%;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            .chart {
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            main {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Chart Page</h1>
-    <div id="chart-container">
-        <p>Chart will be displayed here.</p>
-    </div>
+    <!-- Header with navigation -->
+    <header>
+        <div class="logo">Student Performance Prediction and Analysis</div>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/predict">Prediction</a>
+            <a href="/result">Results</a>
+            <a href="/charts" class="active">Charts</a>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main>
+        <h1 class="page-title">Student Performance Analysis</h1>
+
+        <!-- Chart containers -->
+        <div id="hasData" class="{% if not chart_data %}hidden{% endif %}">
+            <!-- Subject Comparison Chart -->
+            <div class="chart-container">
+                <div class="chart-title">Current vs Previous Students Performance</div>
+                <div class="chart">
+                    <canvas id="subjectComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Average Performance Chart -->
+            <div class="chart-container">
+                <div class="chart-title">Current Student vs Class Average</div>
+                <div class="chart">
+                    <canvas id="averageComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Weak Subjects Distribution -->
+            <div class="chart-container">
+                <div class="chart-title">Weak Subject Distribution</div>
+                <div class="chart">
+                    <canvas id="weakSubjectsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Factors -->
+            <div class="chart-container">
+                <div class="chart-title">Performance Factors Analysis</div>
+                <div class="chart">
+                    <canvas id="factorsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button onclick="window.location.href='/predict'">Make Another Prediction</button>
+                <button class="secondary" onclick="window.location.href='/result'">Back to Results</button>
+            </div>
+        </div>
+
+        <div id="noData" class="{% if chart_data %}hidden{% endif %}">
+            <div class="chart-container">
+                <div class="no-data">
+                    No prediction data available. Please make a prediction first.
+                </div>
+                <div class="btn-container">
+                    <button onclick="window.location.href='/predict'">Make a Prediction</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Student Performance Prediction Project. All rights reserved.</p>
+    </footer>
+
+    <!-- Hidden data element for passing data from Flask to JS -->
+    <script type="application/json" id="chart-data">
+        {% if chart_data %}{{ chart_data|tojson }}{% else %}{}{% endif %}
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get chart data from the hidden element
+            const chartDataElement = document.getElementById('chart-data');
+            if (!chartDataElement) return;
+
+            try {
+                const chartData = JSON.parse(chartDataElement.textContent);
+
+                // Check if we have valid data
+                if (chartData && Object.keys(chartData).length > 0) {
+                    // Create all charts
+                    createSubjectComparisonChart(chartData);
+                    createAverageComparisonChart(chartData);
+                    createWeakSubjectsChart(chartData);
+                    createFactorsChart(chartData);
+                }
+            } catch (e) {
+                console.error("Error parsing chart data:", e);
+            }
+        });
+
+        // Chart 1: Subject Comparison with Previous Students
+        function createSubjectComparisonChart(chartData) {
+            const ctx = document.getElementById('subjectComparisonChart');
+
+            // Current student data
+            const currentStudent = chartData.current_student;
+
+            // Previous students data
+            const prevStudents = chartData.previous_students.slice(0, 5); // Limit to 5 for readability
+
+            // Create labels for each student
+            const labels = ['Subject 1', 'Subject 2', 'Subject 3'];
+
+            // Datasets
+            const datasets = [{
+                label: `Student ${currentStudent.studentid}`,
+                data: [currentStudent.predicted_sub1, currentStudent.predicted_sub2, currentStudent.predicted_sub3],
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }];
+
+            // Add previous students
+            prevStudents.forEach((student) => {
+                datasets.push({
+                    label: `Student ${student.studentid}`,
+                    data: [student.predicted_sub1, student.predicted_sub2, student.predicted_sub3],
+                    backgroundColor: `rgba(153, 102, 255, 0.4)`,
+                    borderColor: `rgba(153, 102, 255, 0.6)`,
+                    borderWidth: 1
+                });
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Predicted Marks'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Average Comparison Chart
+        function createAverageComparisonChart(chartData) {
+            const ctx = document.getElementById('averageComparisonChart');
+
+            const currentStudent = chartData.current_student;
+            const averages = chartData.averages;
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Subject 1', 'Subject 2', 'Subject 3'],
+                    datasets: [{
+                        label: `Student ${currentStudent.studentid}`,
+                        data: [
+                            currentStudent.predicted_sub1,
+                            currentStudent.predicted_sub2,
+                            currentStudent.predicted_sub3
+                        ],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
+                    }, {
+                        label: 'Class Average',
+                        data: [
+                            averages.avg_sub1,
+                            averages.avg_sub2,
+                            averages.avg_sub3
+                        ],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Weak Subjects Distribution
+        function createWeakSubjectsChart(chartData) {
+            const ctx = document.getElementById('weakSubjectsChart');
+
+            const weakSubjects = chartData.weak_subjects;
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Subject 1', 'Subject 2', 'Subject 3', 'No Weak Subjects'],
+                    datasets: [{
+                        data: [
+                            weakSubjects.weak_sub1,
+                            weakSubjects.weak_sub2,
+                            weakSubjects.weak_sub3,
+                            weakSubjects.no_weak
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribution of Weak Subjects Across All Predictions'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 4: Performance Factors
+        function createFactorsChart(chartData) {
+            const ctx = document.getElementById('factorsChart');
+
+            const factors = chartData.student_factors;
+            const currentStudent = chartData.current_student;
+
+            if (!factors) {
+                document.getElementById('factorsChart').parentNode.innerHTML =
+                    '<div class="no-data">No factor data available for this student.</div>';
+                return;
+            }
+
+            // Normalize factors for better visualization
+            const normalizedFactors = {
+                'Study Time': Math.min(10, factors.study_time) / 10 * 100,
+                'Absences': Math.min(30, factors.absences) / 30 * 100,
+                'Health': factors.health,
+                'Travel Time': Math.min(2, factors.travel_time) / 2 * 100,
+                'Previous Failures': Math.min(3, factors.failures) / 3 * 100
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(normalizedFactors),
+                    datasets: [{
+                        label: `Student ${factors.student_id} - Factor Impact (%)`,
+                        data: Object.values(normalizedFactors),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Normalized Impact (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw.toFixed(1);
+                                    return `${label}: ${value}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
-
