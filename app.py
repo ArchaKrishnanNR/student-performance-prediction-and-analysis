@@ -1,14 +1,27 @@
 import os
 from flask import Flask, render_template, jsonify, request, redirect, session, flash, url_for
+from dotenv import load_dotenv
 import mysql.connector
 import hashlib
 import datetime
 import joblib
 import numpy as np
 import json  # Import json for proper handling of lists in URLs
+import requests  # For Gemini API calls
+import base64
+import os
 
+
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = "lbs2025"  # Secret key for session and flash messages
+app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY") # Secret key for session and flash messages
+
+# Define subject names for clarity and consistency
+SUBJECT_NAMES = {
+    "sub1": "Linear Algebra and Calculus",
+    "sub2": "Engineering Mechanics",
+    "sub3": "Basics of Electrical and Electronics Engineering"
+}
 
 # Load ML Model and Thresholds
 model = joblib.load('student_model.pkl')
@@ -17,12 +30,11 @@ thresholds = joblib.load('thresholds.pkl')
 # Database Connection Function
 def get_db_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Athira2004@",  # Change this to your MySQL password
-        database="student_performance_prediction_and_analysis"
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -77,11 +89,12 @@ def logout():
     session.pop('username', None)
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
+
 @app.route('/predict', methods=['POST', 'GET'])
 def predict():
     if request.method == 'GET':
         # Render the prediction form if accessed via GET
-        return render_template('prediction.html')
+        return render_template('prediction.html', subject_names=SUBJECT_NAMES)
 
     if 'username' not in session:
         flash("Please log in to make predictions.", "error")
@@ -115,6 +128,9 @@ def predict():
         internet_access = 1 if request.form.get('internetAccess', '').lower() == 'yes' else 0
         health = int(request.form.get('health', 0))
         absences = int(request.form.get('absences', 0))
+
+        # Get subject marks - these fields now have specific subject names in the form
+        # but we still process them as generic subject1_mark, subject2_mark, subject3_mark
         sub1_mark = int(request.form.get('subject1Mark', 0))
         sub2_mark = int(request.form.get('subject2Mark', 0))
         sub3_mark = int(request.form.get('subject3Mark', 0))
@@ -203,20 +219,23 @@ def predict():
 
             weak_subjects = []
             if predicted_marks[0] < thresholds['Sub1']:
-                weak_subjects.append("Subject 1")
+                weak_subjects.append(SUBJECT_NAMES['sub1'])
             if predicted_marks[1] < thresholds['Sub2']:
-                weak_subjects.append("Subject 2")
+                weak_subjects.append(SUBJECT_NAMES['sub2'])
             if predicted_marks[2] < thresholds['Sub3']:
-                weak_subjects.append("Subject 3")
+                weak_subjects.append(SUBJECT_NAMES['sub3'])
 
             weak_subjects_str = ", ".join(weak_subjects) if weak_subjects else "None"
             print(f"Weak subjects: {weak_subjects_str}")
 
-            # Store prediction results in session for result page
+            # Store prediction results in session for result page, including subject names
             session['prediction_results'] = {
                 'sub1': int(predicted_marks[0]),
                 'sub2': int(predicted_marks[1]),
                 'sub3': int(predicted_marks[2]),
+                'subject1_name': SUBJECT_NAMES['sub1'],
+                'subject2_name': SUBJECT_NAMES['sub2'],
+                'subject3_name': SUBJECT_NAMES['sub3'],
                 'weak_subjects': weak_subjects_str
             }
 
@@ -290,9 +309,157 @@ def result():
     # Get prediction results from session
     prediction_results = session.pop('prediction_results', None)
 
-    return render_template('result.html', results=prediction_results)
-# Add these routes to your existing app.py file
+    # Make sure subject names are included
+    if prediction_results and 'subject1_name' not in prediction_results:
+        prediction_results['subject1_name'] = SUBJECT_NAMES['sub1']
+        prediction_results['subject2_name'] = SUBJECT_NAMES['sub2']
+        prediction_results['subject3_name'] = SUBJECT_NAMES['sub3']
 
+    # Parse weak subjects if needed for clarity in the UI
+    if prediction_results and prediction_results['weak_subjects'] != "None":
+        weak_subjects_list = prediction_results['weak_subjects'].split(", ")
+        prediction_results['weak_subjects_list'] = weak_subjects_list
+
+    return render_template('result.html', results=prediction_results)
+
+@app.route('/generate-resources', methods=['POST'])
+def generate_resources():
+    try:
+        # Fix 1: Add debug logging with proper spacing between outputs
+        print("Starting generate_resources function")
+
+        # Fix 2: Get username with proper spacing
+        username = session.get('username', 'Unknown')
+        print(f"Current User's Login: {username}")  # Note: Added space after username
+
+        # Fix 3: Use direct API key instead of environment variable for immediate testing
+        api_key = os.getenv("GEMI_API_KEY")  # Replace this with your actual Gemini API key
+
+        print(f"API key available: {bool(api_key)}")  # Debug without showing the actual key
+
+        if not api_key:
+            print("API key not configured")
+            return jsonify({'error': 'API key not configured'}), 500
+
+        # Fix 4: Print the request data without revealing sensitive information
+        data = request.json
+        weak_subjects = data.get('subjects')
+        print(f"Received request for subjects: {weak_subjects}")
+
+        if not weak_subjects:
+            print("No subjects provided in request")
+            return jsonify({'error': 'No subjects provided'}), 400
+
+        # Format prompt
+        prompt = f"""Generate learning resources for a student who needs to improve in {weak_subjects}.
+
+For each subject, provide:
+1. 2-3 CURRENTLY AVAILABLE online courses students can enroll in right now (specify if free or paid)
+2. 1 specific book recommendation with author name
+3. 1-2 YouTube channels or specific video series that teach this subject effectively
+4. 1 practical study technique that can improve understanding quickly
+
+Format the response as HTML with:
+- Use <h3> style="font-weight:bold;margin-top:25px;"> tags for subject headings
+- Each subject section should be in its own <div> with margin-bottom:20px
+- Use <ul> and <li> tags for listing resources
+- Add <br> tags between resource categories
+- Use <strong> tags for resource type headings
+
+Example format:
+<div class="subject-section">
+<h3 style="font-weight:bold;color:#003366;">SUBJECT NAME</h3>
+<ul>
+<li><strong>Online Courses Available Now:</strong>
+   - Course Name 1 (Free/Paid, platform) - brief description
+   - Course Name 2 (Free/Paid, platform) - brief description
+</li><br>
+<li><strong>Recommended Book:</strong> "Book Title" by Author Name</li><br>
+<li><strong>YouTube Resources:</strong> Channel Name - focus area, Video Series - what it covers</li><br>
+<li><strong>Effective Study Technique:</strong> Detailed description of practice method</li>
+</ul>
+</div>
+"""
+        print("Sending request to Gemini API...")
+
+        # Fix 5: Add more detailed error handling for the API request
+        try:
+            # Call Gemini API
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key={api_key}",
+                json={
+                    "contents": [{
+                        "parts": [{
+                            "text": prompt
+                        }]
+                    }]
+                },
+                timeout=30  # Add timeout to prevent hanging
+            )
+
+            # Fix 6: Add detailed logging for the response
+            print(f"API response status code: {response.status_code}")
+
+            # Process response
+            if response.status_code != 200:
+                error_info = f"API returned status code {response.status_code}"
+                try:
+                    error_body = response.json()
+                    if 'error' in error_body:
+                        error_info += f": {error_body['error'].get('message', '')}"
+                except:
+                    error_info += f" - Raw response: {response.text[:100]}"
+
+                print(f"API error: {error_info}")
+                return jsonify({'error': error_info}), 500
+
+            # Fix 7: Add error handling for JSON parsing
+            try:
+                result = response.json()
+            except Exception as json_err:
+                print(f"Failed to parse API response as JSON: {str(json_err)}")
+                return jsonify({'error': 'Invalid response from API'}), 500
+
+            # Fix 8: Better handling of the response structure and cleaning unwanted markers
+            try:
+                generated_html = result['candidates'][0]['content']['parts'][0]['text']
+
+                # Clean up unwanted text from the response
+                import re
+
+                # Remove date/time header
+                generated_html = re.sub(r'Current Date and Time.*?\n', '', generated_html)
+
+                # Remove user login header
+                generated_html = re.sub(r'Current User\'s Login:.*?\n', '', generated_html)
+
+                # Remove code block markers
+                generated_html = re.sub(r'```html', '', generated_html)
+                generated_html = re.sub(r'```', '', generated_html)
+                generated_html = re.sub(r"'''html", '', generated_html)
+                generated_html = re.sub(r"'''", '', generated_html)
+
+                # Clean up any extra whitespace
+                generated_html = generated_html.strip()
+
+                print("Successfully generated resources")
+
+                return jsonify({
+                    'resources': generated_html
+                })
+            except KeyError as key_err:
+                print(f"Unexpected API response structure: {key_err}")
+                return jsonify({'error': 'Invalid response structure from API'}), 500
+
+        except requests.exceptions.RequestException as req_err:
+            print(f"Request exception: {str(req_err)}")
+            return jsonify({'error': f'Request to API failed: {str(req_err)}'}), 500
+
+    except Exception as e:
+        # Log the full error for debugging - with proper formatting
+        error_msg = f"Error generating resources: {str(e)}"
+        print(error_msg)
+        return jsonify({'error': 'Internal server error'}), 500
 @app.route('/charts')
 def charts():
     if 'username' not in session:

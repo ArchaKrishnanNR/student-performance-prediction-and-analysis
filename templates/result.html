@@ -157,6 +157,30 @@
             border-radius: 4px;
         }
 
+        .resources-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .resources-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .btn-container {
             margin-top: 2rem;
             text-align: center;
@@ -258,16 +282,16 @@
                     <div class="result-title">Predicted Final Grades</div>
                     <div class="marks-container">
                         <div class="mark-box">
-                            <div class="subject-name">Subject 1</div>
-                            <div class="mark {% if results.weak_subjects and 'Subject 1' in results.weak_subjects %}weak{% endif %}">{{ results.sub1 }}</div>
+                            <div class="subject-name">{{ results.subject1_name }}</div>
+                            <div class="mark {% if results.weak_subjects and results.subject1_name in results.weak_subjects %}weak{% endif %}">{{ results.sub1 }}</div>
                         </div>
                         <div class="mark-box">
-                            <div class="subject-name">Subject 2</div>
-                            <div class="mark {% if results.weak_subjects and 'Subject 2' in results.weak_subjects %}weak{% endif %}">{{ results.sub2 }}</div>
+                            <div class="subject-name">{{ results.subject2_name }}</div>
+                            <div class="mark {% if results.weak_subjects and results.subject2_name in results.weak_subjects %}weak{% endif %}">{{ results.sub2 }}</div>
                         </div>
                         <div class="mark-box">
-                            <div class="subject-name">Subject 3</div>
-                            <div class="mark {% if results.weak_subjects and 'Subject 3' in results.weak_subjects %}weak{% endif %}">{{ results.sub3 }}</div>
+                            <div class="subject-name">{{ results.subject3_name }}</div>
+                            <div class="mark {% if results.weak_subjects and results.subject3_name in results.weak_subjects %}weak{% endif %}">{{ results.sub3 }}</div>
                         </div>
                     </div>
 
@@ -280,14 +304,24 @@
 
                     <div class="recommendation">
                         <div class="result-title">Recommendations</div>
+                        <p id="general-recommendation">
+                            {% if results.weak_subjects and results.weak_subjects != "None" %}
+                            We recommend increasing study time for the weak subjects, seeking additional help from teachers,
+                            and considering tutoring or extra practice sessions. Setting specific learning goals for these subjects
+                            can also help improve performance.
+                            {% else %}
+                            The student is performing well in all subjects. To maintain this progress, we recommend continuing
+                            with the current study habits, exploring advanced topics in areas of interest, and helping peers
+                            who may be struggling with these subjects.
+                            {% endif %}
+                        </p>
+
                         {% if results.weak_subjects and results.weak_subjects != "None" %}
-                        <p>We recommend increasing study time for the weak subjects, seeking additional help from teachers,
-                           and considering tutoring or extra practice sessions. Setting specific learning goals for these subjects
-                           can also help improve performance.</p>
-                        {% else %}
-                        <p>The student is performing well in all subjects. To maintain this progress, we recommend continuing
-                           with the current study habits, exploring advanced topics in areas of interest, and helping peers
-                           who may be struggling with these subjects.</p>
+                        <div id="resources-container">
+                            <h3 class="result-title" style="margin-top: 15px;">Learning Resources</h3>
+                            <p id="loading-resources"><span class="loading-spinner"></span> Generating personalized resources...</p>
+                            <div id="resources-content" style="display: none;"></div>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -306,9 +340,58 @@
     </footer>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Any client-side logic can go here
+       document.addEventListener("DOMContentLoaded", function() {
+    // Get weak subjects if any
+    const weakSubjectsElement = document.querySelector('.weak-subjects strong');
+
+    if (weakSubjectsElement) {
+        const weakSubjects = weakSubjectsElement.textContent;
+        generateResources(weakSubjects);
+    }
+});
+
+async function generateResources(weakSubjects) {
+    try {
+        // Show loading indicator
+        document.getElementById('loading-resources').style.display = 'block';
+
+        console.log("Requesting resources for:", weakSubjects);
+
+        const response = await fetch('/generate-resources', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                subjects: weakSubjects
+            })
         });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server request failed with status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Hide loading indicator and display resources
+        document.getElementById('loading-resources').style.display = 'none';
+        const resourcesContent = document.getElementById('resources-content');
+        resourcesContent.innerHTML = data.resources || "No resources available.";
+        resourcesContent.style.display = 'block';
+
+    } catch (error) {
+        console.error("Error generating resources:", error);
+        document.getElementById('loading-resources').innerHTML =
+            "Sorry, we couldn't generate personalized resources at this time. Please try again later.";
+    }
+}
     </script>
 </body>
 </html>

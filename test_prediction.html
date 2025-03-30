@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Predictions - Student Performance Prediction</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: #000;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 60%;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #4CAF50;
+        }
+
+        nav a.active {
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        /* User icon styles */
+        .user-icon {
+            display: flex;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            margin-left: 1rem;
+        }
+
+        .user-icon i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .user-icon:hover {
+            color: #4CAF50;
+        }
+
+        /* Main Content Styles */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .page-title {
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .user-info {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .user-info h2 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .user-info p {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .user-info .date {
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Predictions table styles */
+        .predictions-table-container {
+            width: 100%;
+            max-width: 1000px;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            padding: 1rem;
+        }
+
+        .predictions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .predictions-table th,
+        .predictions-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .predictions-table th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .predictions-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .predictions-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .mark-cell {
+            font-weight: bold;
+        }
+
+        .high-mark {
+            color: #4CAF50;
+        }
+
+        .medium-mark {
+            color: #2196F3;
+        }
+
+        .low-mark {
+            color: #F44336;
+        }
+
+        .average-row {
+            background-color: #f0f8ff;
+            font-weight: bold;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .back-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            background-color: #45a049;
+        }
+
+        /* No predictions message */
+        .no-predictions {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+                width: 50%;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .predictions-table th,
+            .predictions-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .predictions-table {
+                font-size: 0.8rem;
+            }
+
+            .predictions-table th,
+            .predictions-table td {
+                padding: 0.5rem 0.3rem;
+            }
+        }
+    </style>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <!-- Header with navigation -->
+    <header>
+        <div class="logo">Student Performance Prediction and Analysis</div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+            <a href="prediction.html">Prediction</a>
+            <div class="user-icon">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ username }}</span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main>
+        <h1 class="page-title">Your Prediction History</h1>
+
+        <div class="user-info">
+            <h2>User: {{ username }}</h2>
+            <p class="date">Current Date: {{ current_time }}</p>
+        </div>
+
+        {% if predictions %}
+            <div class="predictions-table-container">
+                <h2 style="margin-bottom: 1rem; color: #333;">Your Performance Predictions</h2>
+                <table class="predictions-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Subject 1</th>
+                            <th>Subject 2</th>
+                            <th>Subject 3</th>
+                            <th>Weak Subjects</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediction in predictions %}
+                            <tr>
+                                <td>{{ prediction.studentid }}</td>
+
+                                </td>
+
+
+                                <td class="mark-cell {% if prediction.predicted_sub1 >= 70 %}high-mark{% elif prediction.predicted_sub1 >= 50 %}medium-mark{% else %}low-mark{% endif %}">
+                                    {{ prediction.predicted_sub1 }}
+                                </td>
+                                <td class="mark-cell {% if prediction.predicted_sub2 >= 70 %}high-mark{% elif prediction.predicted_sub2 >= 50 %}medium-mark{% else %}low-mark{% endif %}">
+                                    {{ prediction.predicted_sub2 }}
+                                </td>
+                                <td class="mark-cell {% if prediction.predicted_sub3 >= 70 %}high-mark{% elif prediction.predicted_sub3 >= 50 %}medium-mark{% else %}low-mark{% endif %}">
+                                    {{ prediction.predicted_sub3 }}
+                                </td>
+                                <td>{{ prediction.weak_subject }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-predictions">
+                <p>No predictions found for your account.</p>
+                <p>Go to the prediction page to create new student performance predictions.</p>
+            </div>
+        {% endif %}
+
+        <div class="navigation-buttons">
+            <a href="/" class="back-button">Back to Home</a>
+            <a href="/predict" class="back-button" style="background-color: #2196F3;">New Prediction</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Student Performance Prediction Project. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // User profile navigation
+        document.querySelector(".user-icon").addEventListener("click", function() {
+            window.location.href = "profile.html";
+        });
+    </script>
+</body>
+</html>

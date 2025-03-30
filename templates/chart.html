@@ -241,7 +241,7 @@
 
             <div class="btn-container">
                 <button onclick="window.location.href='/predict'">Make Another Prediction</button>
-                <button class="secondary" onclick="window.location.href='/result'">Back to Results</button>
+
             </div>
         </div>
 
@@ -344,54 +344,83 @@
             });
         }
 
-        // Chart 2: Average Comparison Chart
+        // Chart 2: Average Comparison Chart - Updated to use Radar Chart
         function createAverageComparisonChart(chartData) {
             const ctx = document.getElementById('averageComparisonChart');
 
             const currentStudent = chartData.current_student;
             const averages = chartData.averages;
 
+            // Using a radar chart for better visualization of comparisons across subjects
             new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Subject 1', 'Subject 2', 'Subject 3'],
-                    datasets: [{
-                        label: `Student ${currentStudent.studentid}`,
-                        data: [
-                            currentStudent.predicted_sub1,
-                            currentStudent.predicted_sub2,
-                            currentStudent.predicted_sub3
-                        ],
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
-                    }, {
-                        label: 'Class Average',
-                        data: [
-                            averages.avg_sub1,
-                            averages.avg_sub2,
-                            averages.avg_sub3
-                        ],
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
-                    }]
+                    labels: ['Subject 1', 'Subject 2', 'Subject 3', 'Overall Average'],
+                    datasets: [
+                        {
+                            label: `Student ${currentStudent.studentid}`,
+                            data: [
+                                currentStudent.predicted_sub1,
+                                currentStudent.predicted_sub2,
+                                currentStudent.predicted_sub3,
+                                (currentStudent.predicted_sub1 + currentStudent.predicted_sub2 + currentStudent.predicted_sub3) / 3
+                            ],
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Class Average',
+                            data: [
+                                averages.avg_sub1,
+                                averages.avg_sub2,
+                                averages.avg_sub3,
+                                (averages.avg_sub1 + averages.avg_sub2 + averages.avg_sub3) / 3
+                            ],
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        line: {
+                            tension: 0.4
+                        }
+                    },
                     scales: {
                         r: {
                             angleLines: {
                                 display: true
                             },
                             suggestedMin: 0,
-                            suggestedMax: 100
+                            suggestedMax: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(1)}`;
+                                }
+                            }
                         }
                     }
                 }
