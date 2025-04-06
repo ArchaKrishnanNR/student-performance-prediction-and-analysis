@@ -6,17 +6,17 @@ import hashlib
 import datetime
 import joblib
 import numpy as np
-import json  # Import json for proper handling of lists in URLs
-import requests  # For Gemini API calls
+import json
+import requests
 import base64
 import os
 
 
 load_dotenv()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY") # Secret key for session and flash messages
+app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY")
 
-# Define subject names for clarity and consistency
+
 SUBJECT_NAMES = {
     "sub1": "Linear Algebra and Calculus",
     "sub2": "Engineering Mechanics",
@@ -129,8 +129,7 @@ def predict():
         health = int(request.form.get('health', 0))
         absences = int(request.form.get('absences', 0))
 
-        # Get subject marks - these fields now have specific subject names in the form
-        # but we still process them as generic subject1_mark, subject2_mark, subject3_mark
+
         sub1_mark = int(request.form.get('subject1Mark', 0))
         sub2_mark = int(request.form.get('subject2Mark', 0))
         sub3_mark = int(request.form.get('subject3Mark', 0))
@@ -325,23 +324,23 @@ def result():
 @app.route('/generate-resources', methods=['POST'])
 def generate_resources():
     try:
-        # Fix 1: Add debug logging with proper spacing between outputs
+
         print("Starting generate_resources function")
 
-        # Fix 2: Get username with proper spacing
+
         username = session.get('username', 'Unknown')
-        print(f"Current User's Login: {username}")  # Note: Added space after username
+        print(f"Current User's Login: {username}")
 
-        # Fix 3: Use direct API key instead of environment variable for immediate testing
-        api_key = os.getenv("GEMI_API_KEY")  # Replace this with your actual Gemini API key
 
-        print(f"API key available: {bool(api_key)}")  # Debug without showing the actual key
+        api_key = os.getenv("GEMI_API_KEY")
+
+        print(f"API key available: {bool(api_key)}")
 
         if not api_key:
             print("API key not configured")
             return jsonify({'error': 'API key not configured'}), 500
 
-        # Fix 4: Print the request data without revealing sensitive information
+
         data = request.json
         weak_subjects = data.get('subjects')
         print(f"Received request for subjects: {weak_subjects}")
@@ -382,7 +381,7 @@ Example format:
 """
         print("Sending request to Gemini API...")
 
-        # Fix 5: Add more detailed error handling for the API request
+
         try:
             # Call Gemini API
             response = requests.post(
@@ -394,10 +393,9 @@ Example format:
                         }]
                     }]
                 },
-                timeout=30  # Add timeout to prevent hanging
+                timeout=30
             )
 
-            # Fix 6: Add detailed logging for the response
             print(f"API response status code: {response.status_code}")
 
             # Process response
