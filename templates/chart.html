@@ -291,58 +291,60 @@
 
         // Chart 1: Subject Comparison with Previous Students
         function createSubjectComparisonChart(chartData) {
-            const ctx = document.getElementById('subjectComparisonChart');
+    const ctx = document.getElementById('subjectComparisonChart');
 
-            // Current student data
-            const currentStudent = chartData.current_student;
+    // Current student data
+    const currentStudent = chartData.current_student;
 
-            // Previous students data
-            const prevStudents = chartData.previous_students.slice(0, 5); // Limit to 5 for readability
+    // Previous students data
+    const prevStudents = chartData.previous_students.slice(0, 5); // Limit to 5 for readability
 
-            // Create labels for each student
-            const labels = ['Subject 1', 'Subject 2', 'Subject 3'];
+    // Create labels for each student
+    const labels = ['Linear Algebra and Calculus', 'Engineering Mechanics', 'Basics of electrical and electronics engineering'];
 
-            // Datasets
-            const datasets = [{
-                label: `Student ${currentStudent.studentid}`,
-                data: [currentStudent.predicted_sub1, currentStudent.predicted_sub2, currentStudent.predicted_sub3],
-                backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }];
+    // Datasets
+    const datasets = [
+        {
+            label: `Student ${currentStudent.studentid}`,
+            data: [currentStudent.predicted_sub1, currentStudent.predicted_sub2, currentStudent.predicted_sub3],
+            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }
+    ];
 
-            // Add previous students
-            prevStudents.forEach((student) => {
-                datasets.push({
-                    label: `Student ${student.studentid}`,
-                    data: [student.predicted_sub1, student.predicted_sub2, student.predicted_sub3],
-                    backgroundColor: `rgba(153, 102, 255, 0.4)`,
-                    borderColor: `rgba(153, 102, 255, 0.6)`,
-                    borderWidth: 1
-                });
-            });
+    // Add previous students
+    prevStudents.forEach((student) => {
+        datasets.push({
+            label: `Student ${student.studentid}`,
+            data: [student.predicted_sub1, student.predicted_sub2, student.predicted_sub3],
+            backgroundColor: 'rgba(153, 102, 255, 0.4)',
+            borderColor: 'rgba(153, 102, 255, 0.6)',
+            borderWidth: 1
+        });
+    });
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Predicted Marks'
-                            }
-                        }
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Predicted Marks'
                     }
                 }
-            });
+            }
         }
+    });
+}
 
         // Chart 2: Average Comparison Chart - Updated to use Radar Chart
         function createAverageComparisonChart(chartData) {
@@ -355,7 +357,7 @@
             new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Subject 1', 'Subject 2', 'Subject 3', 'Overall Average'],
+                    labels: ['Linear Algebra and Calculus', 'Engineering Mechanics', 'Basics of electrical and electronics engineering', 'Overall Average'],
                     datasets: [
                         {
                             label: `Student ${currentStudent.studentid}`,
@@ -436,7 +438,7 @@
             new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['Subject 1', 'Subject 2', 'Subject 3', 'No Weak Subjects'],
+                    labels: ['Linear Algebra and Calculus', 'Engineering Mechanics', 'Basics of electrical and electronics engineering', 'No Weak Subjects'],
                     datasets: [{
                         data: [
                             weakSubjects.weak_sub1,
