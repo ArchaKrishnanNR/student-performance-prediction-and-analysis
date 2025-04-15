@@ -5,10 +5,19 @@
 This project focuses on predicting and analyzing student performance using various factors. It provides insights into student data trends and helps in making informed decisions to improve academic outcomes.
 
 ## Features
-- Predict student performance based on input data.
-- Analyze trends in student data.
-- Generate visualizations and reports for better understanding.
 
+1. **Predict Final Marks**  
+   Provides predictions for students' final marks based on the input data.
+
+2. **Identify Weak Subjects**  
+   Highlights weak subjects using Z-score analysis to pinpoint areas needing improvement.
+
+3. **Suggest Learning Resources**  
+   Recommends personalized learning resources for weak subjects using the Gemini API.
+
+4. **Data Visualization**  
+   Offers interactive charts and graphs for better understanding and analysis of student performance.
+   
 ## Dataset Information
 The dataset used in this project includes the following attributes:
 
