@@ -1,5 +1,7 @@
 # Student Performance Prediction and Analysis
 
+!(landing.png)
+
 ## Introduction
 This project focuses on predicting and analyzing student performance using various factors. It provides insights into student data trends and helps in making informed decisions to improve academic outcomes.
 
