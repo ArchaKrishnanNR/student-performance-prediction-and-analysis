@@ -1,5 +1,5 @@
 # Student Performance Prediction and Analysis
-![Landing Page](landing.png)
+![Landing Page](static/landing.png)
 
 ## Introduction
 This project focuses on predicting and analyzing student performance using various factors. It provides insights into student data trends and helps in making informed decisions to improve academic outcomes.
@@ -83,8 +83,12 @@ The dataset used in this project includes the following attributes:
 - **CSS**
 - **Javascript**
 - **Python**
-- **Flask** 
+- **Flask**
 
+## Demo Video
+[![Watch the demo](https://img.youtube.com/vi/5CVn9qJ1kPA/0.jpg)](https://youtu.be/5CVn9qJ1kPA)
+
+ 
 ## Contact Information
 For any queries or suggestions, feel free to reach out:
 - **Owner**: Athirakadavath
